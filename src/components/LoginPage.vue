@@ -3,7 +3,7 @@
     <main class="card" role="main">
       <h1 class="brand">chacall</h1>
 
-      <form @submit.prevent="onSubmit" novalidate>
+      <form @submit.prevent="handleLogin" novalidate>
         <div class="field">
           <label for="phoneNumber">아이디 (핸드폰 번호)</label>
           <input
@@ -46,6 +46,8 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { login } from '@/api/UserApi'
+import { validatePassword, validatePhoneNumber } from '@/utils/Validation'
 
 const router = useRouter()
 
@@ -58,52 +60,30 @@ const errors = reactive({ phoneNumber: '', password: '' })
 const submitting = ref(false)
 
 function validate() {
-  errors.phoneNumber = ''
-  errors.password = ''
-
-  const phoneNumberRegex = /^\+?\d{9,15}$/
-  if (!form.phoneNumber.trim()) {
-    errors.phoneNumber = '핸드폰 번호를 입력해주세요.'
-  } else if (!phoneNumberRegex.test(form.phoneNumber.trim())) {
-    errors.phoneNumber = '유효한 전화번호를 입력해주세요.'
-  }
-
-  if (!form.password) {
-    errors.password = '비밀번호를 입력해주세요.'
-  }
+  errors.phoneNumber = validatePhoneNumber(form.phoneNumber.trim())
+  errors.password = validatePassword(form.password)
 
   return !errors.phoneNumber && !errors.password
 }
 
-async function onSubmit() {
+async function handleLogin() {
   if (!validate()) return
   submitting.value = true
 
   try {
-    const payload = {
+    const request = {
       phoneNumber: form.phoneNumber.trim(),
       password: form.password,
     }
 
-    const response = await fetch('/api/users/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    await login(request)
+
+    localStorage.setItem('loggedIn', 'true')
+    await router.push({
+      name: 'cars',
     })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      alert(`로그인 실패: ${errorData.message || response.statusText}`)
-      return
-    }
-
-    // const data = await response.json()
-    // console.log('로그인 성공:', data)
-
-    await router.push('/cars')
   } catch (err) {
-    console.error(err)
-    alert('서버 요청 중 오류가 발생했습니다.')
+    alert(`로그인에 실패하였습니다. 아이디와 비밀번호를 확인해 주세요.`)
   } finally {
     submitting.value = false
   }

@@ -3,7 +3,7 @@
     <main class="card" role="main">
       <h1 class="brand">chacall</h1>
 
-      <form @submit.prevent="onSubmit" novalidate>
+      <form @submit.prevent="handleSignup" novalidate>
         <div class="field">
           <label for="phoneNumber">아이디 (핸드폰 번호)</label>
           <input
@@ -26,7 +26,7 @@
             v-model="form.password"
             type="password"
             autocomplete="new-password"
-            placeholder="비밀번호 입력"
+            placeholder="비밀번호 입력 (8~16자, 영문/숫자/특수문자 포함)"
           />
           <p v-if="errors.password" class="error">{{ errors.password }}</p>
         </div>
@@ -44,7 +44,7 @@
         </div>
 
         <div class="actions">
-          <button :disabled="submitting" type="submit" class="btn" v-on:click="onSubmit">
+          <button :disabled="submitting" type="submit" class="btn" v-on:click="handleSignup">
             {{ submitting ? '등록중...' : '회원가입' }}
           </button>
         </div>
@@ -56,6 +56,8 @@
 </template>
 
 <script setup>
+import { signup } from '@/api/UserApi'
+import { validatePasswordForSignup, validatePhoneNumber } from '@/utils/Validation'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -71,23 +73,9 @@ const errors = reactive({ phoneNumber: '', password: '', passwordConfirm: '' })
 const submitting = ref(false)
 
 function validate() {
-  errors.phoneNumber = ''
-  errors.password = ''
+  errors.phoneNumber = validatePhoneNumber(form.phoneNumber.trim())
+  errors.password = validatePasswordForSignup(form.password)
   errors.passwordConfirm = ''
-
-  const phoneNumberClean = form.phoneNumber.trim()
-  const phoneNumberRegex = /^\+?\d{9,15}$/
-  if (!phoneNumberClean) {
-    errors.phoneNumber = '핸드폰 번호를 입력해주세요.'
-  } else if (!phoneNumberRegex.test(phoneNumberClean)) {
-    errors.phoneNumber = '유효한 전화번호를 입력해주세요. (숫자만, 9~15자리)'
-  }
-
-  if (!form.password) {
-    errors.password = '비밀번호를 입력해주세요.'
-  } else if (form.password.length < 6) {
-    errors.password = '비밀번호는 최소 6자 이상이어야 합니다.'
-  }
 
   if (form.password !== form.passwordConfirm) {
     errors.passwordConfirm = '비밀번호가 일치하지 않습니다.'
@@ -96,39 +84,30 @@ function validate() {
   return !errors.phoneNumber && !errors.name && !errors.password && !errors.passwordConfirm
 }
 
-async function onSubmit() {
+async function handleSignup() {
   if (!validate()) {
     return
   }
   submitting.value = true
 
   try {
-    const payload = {
+    const request = {
       phoneNumber: form.phoneNumber.trim(),
       password: form.password,
+      passwordConfirm: form.passwordConfirm,
     }
 
-    const response = await fetch('/api/users/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      alert(`회원가입 실패: ${errorData.message || response.statusText}`)
-      return
-    }
+    await signup(request)
 
     alert('회원가입이 완료되었습니다!')
     await router.push('/login')
 
     // 폼 초기화
-    //form.password = ''
-    //form.passwordConfirm = ''
+    form.password = ''
+    form.passwordConfirm = ''
   } catch (err) {
     console.error(err)
-    alert('서버 요청 중 오류가 발생했습니다.')
+    alert('회원가입에 실패하였습니다.')
   } finally {
     submitting.value = false
   }

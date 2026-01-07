@@ -7,18 +7,6 @@
           <h2 class="car-name">{{ car.nickname }}</h2>
           <p class="car-status">{{ car.message }}</p>
         </div>
-
-        <!-- 상단 우측 버튼 영역 -->
-        <div class="header-buttons">
-          <img
-            src="../assets/edit_button.png"
-            class="icon-button edit"
-            width="22px"
-            height="22px"
-            @click="openCarInfoEditModal(car)"
-            alt="✏️"
-          />
-        </div>
       </div>
     </header>
 
@@ -28,40 +16,38 @@
         <div class="contact-top">
           <div class="contact-title">
             <span class="contact-name">{{ contact.name || '닉네임' }}</span>
-            <span class="contact-status" :class="{ unavailable: contact.status === '불가능' }">
-              {{ contact.status }}
+            <span
+              class="contact-type"
+              :class="{ main: contact.type === 'MAIN' }"
+              v-if="contact.type === 'MAIN'"
+            >
+              {{ getContactTypeView(contact.type).label }}
+            </span>
+            <span class="contact-status" :class="{ unavailable: contact.status === 'UNAVAILABLE' }">
+              {{ getContactStatusView(contact.status).label }}
             </span>
           </div>
-          <button class="menu-button" @click="openContactEditModal(contact)">⋮</button>
+
+          <!-- ⋮ 메뉴 -->
+          <div class="menu-wrapper">
+            <button class="menu-button" @click.stop="toggleMenu(contact.contactId)">⋮</button>
+
+            <!-- 액션 팝업 -->
+            <div v-if="openedMenuId === contact.contactId" class="action-menu">
+              <button @click="openContactEditModal(contact)">수정</button>
+              <!-- 메인 연락처는 삭제 불가 -->
+              <button v-if="contact.type !== 'MAIN'" class="danger" @click="confirmDelete(contact)">
+                삭제
+              </button>
+            </div>
+          </div>
         </div>
-        <p class="contact-phone">{{ contact.phoneNumber || '연락처' }}</p>
+        <p class="contact-phone">{{ formatPhoneNumber(contact.phoneNumber) || '연락처' }}</p>
       </div>
     </main>
 
     <!-- 추가 버튼 -->
     <button class="add-button" @click="openContactRegisterModal">＋</button>
-
-    <!-- 차량 정보 수정 모달 -->
-    <div v-if="showCarInfoEditModal" class="modal-overlay" @click.self="closeCarInfoEdtiModal">
-      <div class="modal-content">
-        <h3>차량 정보 수정</h3>
-        <form @submit.prevent="saveChanges">
-          <div class="form-group">
-            <label>닉네임</label>
-            <input v-model="carInfoEditForm.nickname" type="text" required />
-          </div>
-          <div class="form-group">
-            <label>상태 메세지</label>
-            <input v-model="carInfoEditForm.message" type="text" required />
-          </div>
-
-          <div class="button-group">
-            <button type="submit" class="save-btn" @click="updateCarInfo">저장</button>
-            <button type="button" class="cancel-btn" @click="closeCarInfoEdtiModal">취소</button>
-          </div>
-        </form>
-      </div>
-    </div>
 
     <!-- 연락처 수정 모달 -->
     <div v-if="showContactEditModal" class="modal-overlay" @click.self="closeContactEditModal">
@@ -69,15 +55,24 @@
         <h3>연락처 수정</h3>
         <form @submit.prevent="saveChanges">
           <div class="form-group">
-            <label>이름</label>
+            <div class="form-label">
+              <label>이름</label><FormHint>3~12자, 특수문자 불가</FormHint>
+            </div>
             <input v-model="contactEditForm.name" type="text" required />
           </div>
           <div class="form-group">
-            <label>전화번호</label>
-            <input v-model="contactEditForm.phoneNumber" type="text" required />
+            <div class="form-label"><label>전화번호</label><FormHint>숫자만 입력</FormHint></div>
+            <input
+              v-model="contactEditForm.phoneNumber"
+              type="text"
+              required
+              inputmode="numeric"
+              @input="onPhoneNumberInput"
+              :disabled="contactEditForm.type === 'MAIN'"
+            />
           </div>
           <div class="form-group">
-            <label>상태</label>
+            <label>통화 가능 여부</label>
             <select v-model="contactEditForm.status">
               <option v-for="option in statusOptions" :value="option.value" :key="option.value">
                 {{ option.text }}
@@ -86,7 +81,7 @@
           </div>
 
           <div class="button-group">
-            <button type="submit" class="save-btn" @click="updateContact">저장</button>
+            <button type="submit" class="save-btn" @click="handleUpdateContact">저장</button>
             <button type="button" class="cancel-btn" @click="closeContactEditModal">취소</button>
           </div>
         </form>
@@ -103,24 +98,32 @@
         <h3>연락처 등록</h3>
         <form @submit.prevent="saveChanges">
           <div class="form-group">
-            <label>이름</label>
+            <div class="form-label">
+              <label>이름</label><FormHint>3~12자, 특수문자 불가</FormHint>
+            </div>
             <input v-model="contactRegisterForm.name" type="text" required />
           </div>
           <div class="form-group">
-            <label>전화번호</label>
-            <input v-model="contactRegisterForm.phoneNumber" type="text" required />
+            <div class="form-label"><label>전화번호</label><FormHint>숫자만 입력</FormHint></div>
+            <input
+              v-model="contactRegisterForm.phoneNumber"
+              type="text"
+              required
+              inputmode="numeric"
+              @input="onPhoneNumberInput"
+            />
           </div>
-          <div class="form-group">
-            <label>상태</label>
+          <!-- <div class="form-group">
+            <label>통화 가능 여부</label>
             <select v-model="contactRegisterForm.status">
               <option v-for="option in statusOptions" :value="option.value" :key="option.value">
                 {{ option.text }}
               </option>
             </select>
-          </div>
+          </div> -->
 
           <div class="button-group">
-            <button type="submit" class="save-btn" @click="registerContact">저장</button>
+            <button type="submit" class="save-btn" @click="handleRegisterContact">저장</button>
             <button type="button" class="cancel-btn" @click="closeContactRegisterModal">
               취소
             </button>
@@ -132,14 +135,28 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
+import { getContactStatusView } from '@/constants/ContactStatusView'
+import { getContactTypeView } from '@/constants/ContactTypeView'
+import { formatPhoneNumber } from '@/utils/Phone'
+import {
+  validateNickname,
+  validateCarMessage,
+  validateName,
+  validatePhoneNumber,
+} from '@/utils/Validation'
+import FormHint from '@/components/common/FormHint.vue'
+import { getCarInfo } from '@/api/CarApi'
+import { getContacts, registerContact, updateContact, deleteContact } from '@/api/ContactApi'
 
-const { data } = history.state
+const props = defineProps({
+  carId: Number,
+})
 
 /* 페이지 mount 시 api 호출 */
 onMounted(async () => {
-  readCarInfo(data.carId)
-  readContacts(data.carId)
+  readCarInfo(props.carId)
+  readContacts(props.carId)
 })
 
 const car = ref({})
@@ -148,69 +165,63 @@ const contacts = ref([])
 
 async function readCarInfo(carId) {
   try {
-    const response = await fetch('/api/cars/' + carId, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    })
-
-    car.value = await response.json()
-  } catch (err) {
-    console.log(err)
+    car.value = await getCarInfo(carId)
+  } catch (e) {
+    console.log(e)
   }
 }
 
 async function readContacts(carId) {
   try {
-    const response = await fetch('/api/cars/' + carId + '/contacts', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    })
-
-    contacts.value = await response.json()
+    contacts.value = await getContacts(carId)
   } catch (err) {
     console.log(err)
   }
 }
 
-const addContact = () => {
-  const newId = contacts.value.length + 1
-  contacts.value.push({
-    id: newId,
-    name: '',
-    phoneNumber: '',
-    status: '가능',
-  })
-}
-
 /* 모달 창 */
-const showCarInfoEditModal = ref(false)
 const showContactEditModal = ref(false)
 const showContactRegisterModal = ref(false)
 
-const carInfoEditForm = ref({ id: null, nickname: '', statusMessage: '' })
-const contactEditForm = ref({ id: null, name: '', phone: '', status: '' })
+const contactEditForm = ref({})
 const statusOptions = ref([
   { text: '가능', value: 'AVAILABLE' },
   { text: '불가능', value: 'UNAVAILABLE' },
 ])
-const contactRegisterForm = ref({ id: null, name: '', phone: '', status: 'AVAILABLE' })
+const contactRegisterForm = ref({ id: null, name: '', phoneNumber: '', status: 'AVAILABLE' })
 
-const openCarInfoEditModal = (carInfo) => {
-  carInfoEditForm.value = { ...carInfo }
-  showCarInfoEditModal.value = true
+const openedMenuId = ref(null)
+
+const toggleMenu = (contactId) => {
+  openedMenuId.value = openedMenuId.value === contactId ? null : contactId
 }
+
+const closeToggleMenu = () => {
+  openedMenuId.value = null
+}
+
+const handleClickOutside = (e) => {
+  if (!e.target.closest('.menu-wrapper')) {
+    closeToggleMenu()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const openContactEditModal = (contact) => {
   contactEditForm.value = { ...contact }
   showContactEditModal.value = true
+  closeToggleMenu()
 }
 
 const openContactRegisterModal = () => {
   showContactRegisterModal.value = true
-}
-
-const closeCarInfoEdtiModal = () => {
-  showCarInfoEditModal.value = false
 }
 
 const closeContactEditModal = () => {
@@ -221,84 +232,86 @@ const closeContactRegisterModal = () => {
   showContactRegisterModal.value = false
 }
 
-async function updateCarInfo() {
+const onPhoneNumberInput = (e) => {
+  e.target.value.replace(/\D/g, '')
+}
+
+const confirmDelete = (contact) => {
+  closeToggleMenu()
+
+  const confirmed = window.confirm('이 연락처를 삭제하시겠습니까?')
+
+  if (!confirmed) return
+
+  handleDeleteContact(contact)
+}
+
+async function handleDeleteContact(contact) {
+  const contactId = contact.contactId
+  const carId = car.value.carId
+
   try {
-    const request = {
-      nickname: carInfoEditForm.value.nickname,
-      message: carInfoEditForm.value.message,
-    }
-
-    const response = await fetch('/api/cars/' + car.value.carId, {
-      method: 'PATCH',
-      headers: { 'Content-type': 'application/json' },
-      body: JSON.stringify(request),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      alert(`차량 정보 수정 실패: ${errorData}`)
-      return
-    }
+    await deleteContact(carId, contactId)
   } catch (err) {
     console.log(err)
   } finally {
-    closeCarInfoEdtiModal()
-    readCarInfo(car.value.carId)
+    readContacts(carId)
   }
 }
 
-async function registerContact() {
+async function handleRegisterContact() {
   try {
-    const request = {
-      phoneNumber: contactRegisterForm.value.phoneNumber,
-      name: contactRegisterForm.value.name,
-      status: contactRegisterForm.value.status,
-    }
+    const name = contactRegisterForm.value.name
+    const phoneNumber = contactRegisterForm.value.phoneNumber
+    const status = contactRegisterForm.value.status
 
-    const response = await fetch('/api/cars/' + car.value.carId + '/contacts', {
-      method: 'POST',
-      headers: { 'Content-type': 'application/json' },
-      body: JSON.stringify(request),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      alert(`연락처 등록 실패: ${errorData}`)
+    const nameError = validateName(name)
+    if (nameError) {
+      alert(nameError)
       return
     }
-  } catch (err) {
-    console.log(err)
-  } finally {
+
+    const phoneNumberError = validatePhoneNumber(phoneNumber)
+    if (phoneNumberError) {
+      alert(phoneNumberError)
+      return
+    }
+
+    await registerContact({ phoneNumber, name, status }, car.value.carId)
+
     showContactRegisterModal.value = false
+    contactRegisterForm.value = {}
     readContacts(car.value.carId)
+  } catch (err) {
+    alert('연락처 등록에 실패하였습니다.')
+  } finally {
   }
 }
 
-async function updateContact() {
+async function handleUpdateContact() {
   try {
-    const request = {
-      phoneNumber: contactEditForm.value.phoneNumber,
-      name: contactEditForm.value.name,
-      status: contactEditForm.value.status,
-    }
+    const name = contactEditForm.value.name
+    const phoneNumber = contactEditForm.value.phoneNumber
+    const status = contactEditForm.value.status
 
-    const contactId = contactEditForm.value.contactId
-    const response = await fetch('/api/contacts/' + contactId, {
-      method: 'PATCH',
-      headers: { 'Content-type': 'application/json' },
-      body: JSON.stringify(request),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      alert(`연락처 수정 실패: ${errorData}`)
+    const nameError = validateName(name)
+    if (nameError) {
+      alert(nameError)
       return
     }
-  } catch (err) {
-    console.log(err)
-  } finally {
+
+    const phoneNumberError = validatePhoneNumber(phoneNumber)
+    if (phoneNumberError) {
+      alert(phoneNumberError)
+      return
+    }
+
+    await updateContact({ phoneNumber, name, status }, contactEditForm.value.contactId)
     showContactEditModal.value = false
     readContacts(car.value.carId)
+  } catch (err) {
+    alert('연락처 정보 수정에 실패하였습니다.')
+  } finally {
   }
 }
 </script>
@@ -426,8 +439,16 @@ async function updateContact() {
 }
 
 .contact-status.unavailable {
-  background: #f3f4f6;
-  color: #9ca3af;
+  background: #ffc3cc;
+  color: #ff4040;
+}
+
+.contact-type.main {
+  font-size: 13px;
+  background: #defdcf;
+  color: #31a71c;
+  padding: 2px 8px;
+  border-radius: 8px;
 }
 
 .menu-button {
@@ -478,6 +499,12 @@ async function updateContact() {
   font-weight: 600;
 }
 
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .form-group input {
   width: 100%;
   padding: 8px;
@@ -490,6 +517,12 @@ async function updateContact() {
   padding: 8px;
   border-radius: 6px;
   border: 1px solid #ccc;
+}
+
+input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
 }
 
 .button-group {
@@ -561,5 +594,34 @@ async function updateContact() {
 .add-button:hover {
   background: #2563eb;
   color: white;
+}
+
+.action-menu {
+  position: absolute;
+  top: 28px;
+  right: 0;
+  min-width: 100px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+  overflow: hidden;
+}
+
+.action-menu button {
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+}
+
+.action-menu button:hover {
+  background: #f5f5f5;
+}
+
+.action-menu button.danger {
+  color: #e53935;
 }
 </style>
