@@ -1,0 +1,103 @@
+.login-page,
+.signup-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  padding: 28px;
+}
+
+.login-page .card {
+  max-width: 400px;
+}
+
+.signup-page .card {
+  max-width: 420px;
+}
+
+.brand {
+  margin: 0 0 18px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--main-blue);
+  text-align: center;
+}
+
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.field input[type='text'],
+.field input[type='tel'],
+.field input[type='password'] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e6e9ee;
+  font-size: 14px;
+  outline: none;
+}
+
+.field input:focus {
+  box-shadow: 0 0 0 4px var(--focus-ring);
+  border-color: var(--main-blue);
+}
+
+.help {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.error {
+  margin-top: 6px;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.signup-link,
+.signin-link {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.signup-link a,
+.signin-link a {
+  color: var(--main-blue);
+  text-decoration: none;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .brand {
+    font-size: 24px;
+  }
+}

@@ -1,0 +1,20 @@
+.icon-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 22px;
+  transition: transform 0.2s ease, opacity 0.2s;
+}
+
+.icon-button:hover {
+  transform: scale(1.15);
+  opacity: 0.8;
+}
+
+.icon-button.delete:hover {
+  color: #dc2626;
+}
+
+.icon-button.edit:hover {
+  color: #2563eb;
+}

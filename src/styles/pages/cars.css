@@ -1,0 +1,97 @@
+.car-list-page {
+  background-color: #f9fafb;
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+  color: #333;
+  position: relative;
+}
+
+.car-list-page .header {
+  margin-bottom: 24px;
+  text-align: left;
+  line-height: 1.5;
+}
+
+.car-list-page .greeting {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.car-list-page .user-phone {
+  font-size: 18px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.car-list-page .car-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.car-list-page .car-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.car-list-page .car-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.car-list-page .car-image {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-right: 12px;
+}
+
+.car-list-page .car-info-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.car-list-page .car-info {
+  flex: 1;
+}
+
+.car-list-page .car-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.car-list-page .car-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.car-list-page .car-desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 4px 0 0;
+}
+
+.car-list-page .empty-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 200px);
+}
+
+.car-list-page .empty-text {
+  font-size: 15px;
+  color: #555;
+}
