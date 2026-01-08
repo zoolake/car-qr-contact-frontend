@@ -9,7 +9,10 @@
     <!-- 차량 목록 -->
     <main class="car-list">
       <div v-for="car in cars" :key="car.carId" class="car-card" @click="goToContactsPage(car)">
-        <img :src="car.imageUrl" alt="car image" class="car-image" />
+        <div class="qr-column">
+          <img :src="car.imageUrl" alt="car image" class="car-image" />
+          <button class="qr-download-btn" @click.stop="downloadQr(car)">QR 저장</button>
+        </div>
         <div class="car-info">
           <h2 class="car-name">{{ car.nickname }}</h2>
           <p class="car-desc">{{ car.message }}</p>
@@ -89,6 +92,7 @@ import { formatPhoneNumber } from '@/utils/Phone'
 import { validateNickname, validateCarMessage } from '@/utils/Validation'
 import FormHint from '@/components/common/FormHint.vue'
 import { getCars, registerCar, updateCarInfo, deleteCar } from '@/api/CarApi'
+import { apiFetch } from '@/api/ApiFetch'
 
 const router = useRouter()
 
@@ -99,6 +103,33 @@ const cars = ref([]) // 등록 차량
 onMounted(async () => {
   readCars()
 })
+
+/* QR 이미지 다운로드 */
+async function downloadQr(car) {
+  let url
+
+  try {
+    const response = await apiFetch(car.imageUrl, { mode: 'cors' })
+
+    const blob = await response.blob()
+    url = URL.createObjectURL(blob)
+
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'QR_' + car.nickname
+
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (err) {
+    console.log(err)
+    alert('이미지 다운로드 실패')
+  } finally {
+    if (url) {
+      URL.revokeObjectURL(url)
+    }
+  }
+}
 
 /* 모달 창 */
 const showCarRegisterModal = ref(false)

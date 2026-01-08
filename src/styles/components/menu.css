@@ -14,12 +14,13 @@
   position: absolute;
   top: 28px;
   right: 0;
-  min-width: 100px;
+  min-width: 70px;
   background: #fff;
   border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.12);
+  border: 1px solid rgba(17, 24, 39, 0.06);
+  padding: 6px;
   z-index: 10;
-  overflow: hidden;
 }
 
 .action-menu button {
@@ -27,8 +28,13 @@
   padding: 10px 14px;
   background: none;
   border: none;
-  text-align: left;
+  text-align: center;
   font-size: 14px;
+  color: #111827;
+  border-radius: 8px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .action-menu button:hover {
@@ -37,4 +43,8 @@
 
 .action-menu button.danger {
   color: #e53935;
+}
+
+.action-menu button.danger:hover {
+  background: #fff1f2;
 }
