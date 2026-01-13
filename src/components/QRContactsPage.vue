@@ -1,13 +1,9 @@
 <template>
-  <div class="car-detail-page">
+  <div class="contact-list-page">
     <!-- 차량 정보 -->
     <header class="car-header">
-      <div class="header-top">
-        <div class="header-left">
-          <h2 class="car-name">{{ carNickname }}</h2>
-          <p class="car-status">{{ carMessage }}</p>
-        </div>
-      </div>
+      <h2 class="car-name">{{ carNickname }}</h2>
+      <p class="car-message">{{ carMessage }}</p>
     </header>
 
     <!-- 연락처 목록 -->
